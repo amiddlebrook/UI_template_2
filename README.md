@@ -29,10 +29,10 @@ For a production build, run `npm run check`. The compiled site is written to `di
 3. In GitHub repository **Settings → Secrets and variables → Actions**, add two repository secrets:
    - `CLOUDFLARE_API_TOKEN`
    - `CLOUDFLARE_ACCOUNT_ID`
-4. Merge to the `master` branch. The workflow verifies TypeScript and the Vite build, then deploys `dist/` using `wrangler.jsonc` to a Workers static-assets site.
+4. Open **Actions → Verify and deploy to Cloudflare Workers → Run workflow**, select `master`, and run it. New commits to `master` will also deploy automatically. The workflow verifies TypeScript and the Vite build, then deploys `dist/` using `wrangler.jsonc`.
 5. Find the resulting `*.workers.dev` URL in the GitHub Actions deployment log / Cloudflare dashboard.
 
-Pull requests run validation only, never deploy. Commits to master automatically deploy **when both secrets are present**. If they are missing, verification still runs and deployment is skipped without falsely claiming a live site. You can also run `npm run deploy` locally after `npx wrangler login`.
+Pull requests run validation only, never deploy. Commits to master and manually dispatched runs on master deploy **when both secrets are present**. If they are missing, verification still runs and deployment is skipped without falsely claiming a live site. You can also run `npm run deploy` locally after `npx wrangler login`.
 
 ## Security and architecture
 
