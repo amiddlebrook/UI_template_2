@@ -1,0 +1,64 @@
+name: Verify and deploy to Cloudflare Workers
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bio-system-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bio-system-dist
+          path: dist/
+          if-no-files-found: error
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: verify
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Check deployment credentials
+        id: cf
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Cloudflare credentials not configured; CI passed but deployment skipped."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.cf.outputs.ready == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.cf.outputs.ready == 'true'
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+        if: steps.cf.outputs.ready == 'true'
+      - run: npm run build
+        if: steps.cf.outputs.ready == 'true'
+      - uses: cloudflare/wrangler-action@v3
+        if: steps.cf.outputs.ready == 'true'
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

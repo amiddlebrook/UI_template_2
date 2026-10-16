@@ -1,159 +1,70 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+import { Activity, CircleDot, ShieldCheck } from 'lucide-react';
 import { SolarNavigation } from './components/SolarNavigation';
 import { Dashboard } from './components/Dashboard';
 import { DataGrid } from './components/DataGrid';
 import { Analytics } from './components/Analytics';
 import { ProcessFlow } from './components/ProcessFlow';
 import { ControlPanel } from './components/ControlPanel';
+import { Documentation } from './components/Documentation';
+import { SettingsPanel } from './components/SettingsPanel';
 import { ViewState } from './types';
-import { motion, AnimatePresence } from 'framer-motion';
 
-// Flow Field Component
-const FlowField = () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        let animationFrameId: number;
-        let particles: { x: number; y: number; vx: number; vy: number; age: number }[] = [];
-        
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-        
-        window.addEventListener('resize', resize);
-        resize();
-
-        const createParticle = () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            age: Math.random() * 100
-        });
-
-        // Initialize particles
-        for(let i=0; i<50; i++) particles.push(createParticle());
-
-        const animate = () => {
-            if (!ctx) return;
-            ctx.fillStyle = 'rgba(15, 17, 21, 0.1)'; // Trail effect
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            particles.forEach((p, i) => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.age++;
-
-                // Perlin-ish noise simulation for flow
-                const angle = (p.x * 0.005) + (p.y * 0.005);
-                p.vx += Math.cos(angle) * 0.02;
-                p.vy += Math.sin(angle) * 0.02;
-
-                // Friction
-                p.vx *= 0.99;
-                p.vy *= 0.99;
-
-                // Wrap around
-                if (p.x < 0) p.x = canvas.width;
-                if (p.x > canvas.width) p.x = 0;
-                if (p.y < 0) p.y = canvas.height;
-                if (p.y > canvas.height) p.y = 0;
-
-                // Draw
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, Math.min(p.age * 0.05, 1.5), 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(99, 102, 241, ${Math.min(p.age * 0.01, 0.3)})`; // Primary color low opacity
-                ctx.fill();
-
-                // Reset old particles
-                if (p.age > 200) particles[i] = createParticle();
-            });
-
-            animationFrameId = requestAnimationFrame(animate);
-        };
-
-        animate();
-
-        return () => {
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationFrameId);
-        };
-    }, []);
-
-    return <canvas ref={canvasRef} className="absolute inset-0 z-0 pointer-events-none opacity-50" />;
+const titles: Record<ViewState, { title: string; summary: string }> = {
+  [ViewState.DASHBOARD]: { title: 'System overview', summary: 'Your simulated ecosystem at a glance' },
+  [ViewState.ANALYTICS]: { title: 'Analytics', summary: 'Explore sample activity and distribution data' },
+  [ViewState.DATA_GRID]: { title: 'Biosphere explorer', summary: 'Search, inspect and filter specimens' },
+  [ViewState.PROCESS]: { title: 'Process topology', summary: 'A visualization of the sample workflow' },
+  [ViewState.CONTROLS]: { title: 'Control center', summary: 'Safely try the interactive controls in demo mode' },
+  [ViewState.SETTINGS]: { title: 'Preferences', summary: 'Customize your local interface experience' },
+  [ViewState.DOCS]: { title: 'Documentation', summary: 'How to run, deploy, and extend Bio-System' },
 };
 
-const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<ViewState>(ViewState.DASHBOARD);
+const content: Record<ViewState, React.ReactNode> = {
+  [ViewState.DASHBOARD]: <Dashboard />,
+  [ViewState.ANALYTICS]: <Analytics />,
+  [ViewState.DATA_GRID]: <DataGrid />,
+  [ViewState.PROCESS]: <ProcessFlow />,
+  [ViewState.CONTROLS]: <ControlPanel />,
+  [ViewState.SETTINGS]: <SettingsPanel />,
+  [ViewState.DOCS]: <Documentation />,
+};
 
-  const renderContent = () => {
-    switch (activeView) {
-      case ViewState.DASHBOARD: return <Dashboard />;
-      case ViewState.ANALYTICS: return <Analytics />;
-      case ViewState.DATA_GRID: return <DataGrid />;
-      case ViewState.PROCESS: return <ProcessFlow />;
-      case ViewState.CONTROLS: return <ControlPanel />;
-      default:
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-app-muted">
-                <div className="text-4xl mb-4 opacity-20 font-mono">404</div>
-            </div>
-        );
-    }
-  };
+export default function App() {
+  const [activeView, setActiveView] = useState<ViewState>(ViewState.DASHBOARD);
+  const page = titles[activeView];
 
   return (
-    <div className="flex h-screen w-screen bg-app-bg overflow-hidden text-app-text selection:bg-app-primary selection:text-white relative">
-      <FlowField />
-      
-      {/* Left: Solar Navigation (Fixed Width) */}
-      <div className="w-[500px] h-full relative flex items-center justify-center border-r border-app-border/30 z-10 bg-app-bg/50 backdrop-blur-sm">
-        <SolarNavigation activeView={activeView} onViewChange={setActiveView} />
-
-        {/* Brand */}
-        <div className="absolute top-8 left-8 z-20">
-            <h1 className="text-2xl font-light font-sans tracking-tight text-white">BIO<span className="font-bold text-app-primary">SYSTEM</span></h1>
-            <p className="text-[10px] text-app-muted tracking-widest uppercase mt-1">v2.1 // Organic UI</p>
-        </div>
-      </div>
-
-      {/* Right: Content Area (Fluid) */}
-      <div className="flex-1 h-full relative flex flex-col z-10">
-        {/* Top Bar */}
-        <div className="h-16 border-b border-app-border/30 flex items-center justify-between px-8 bg-app-surface/30 backdrop-blur-md z-20">
-            <div className="flex items-center gap-4">
-                <span className="text-xs font-mono text-app-muted">ENV:</span>
-                <span className="text-xs font-mono text-app-success">HOMEOSTASIS</span>
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-app-bg text-app-text lg:h-screen lg:flex-row">
+      <div className="pointer-events-none absolute -top-60 right-0 h-[550px] w-[550px] rounded-full bg-indigo-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 left-20 h-80 w-80 rounded-full bg-violet-500/5 blur-[100px]" />
+      <SolarNavigation activeView={activeView} onViewChange={setActiveView} />
+      <main className="relative flex min-w-0 flex-1 flex-col lg:overflow-hidden">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-app-border/70 bg-app-surface/40 px-5 py-4 backdrop-blur-xl sm:px-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-app-primary/25 bg-app-primary/10 text-app-primary"><Activity size={18} /></div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.23em] text-app-muted">Control room / 02</p>
+              <p className="text-sm font-semibold text-app-text">Bio-System workspace</p>
             </div>
-            <div className="flex items-center gap-4">
-                 <div className="w-2 h-2 rounded-full bg-app-primary animate-[pulse_3s_infinite]"></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-app-warning/30 bg-app-warning/10 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-app-warning"><CircleDot size={13} /> DEMO DATA</span>
+            <span className="hidden items-center gap-2 text-xs text-app-muted sm:inline-flex"><ShieldCheck size={15} className="text-app-success" /> Static • No API keys</span>
+          </div>
+        </header>
+        <section className="flex-1 overflow-y-auto px-4 pb-10 pt-6 sm:px-8 lg:min-h-0">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="mb-2 text-[10px] font-mono uppercase tracking-[0.23em] text-app-primary">BIOSYSTEM / {activeView.replace('_', ' ')}</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{page.title}</h1>
+              <p className="mt-2 text-sm text-app-muted">{page.summary}</p>
             </div>
-        </div>
-
-        {/* Main Content Container */}
-        <div className="flex-1 p-8 overflow-hidden relative">
-             <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeView}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.02 }}
-                    transition={{ duration: 0.4, ease: "circOut" }}
-                    className="h-full w-full"
-                >
-                    {renderContent()}
-                </motion.div>
-             </AnimatePresence>
-        </div>
-      </div>
+            <span className="rounded-lg border border-app-border bg-app-surface/70 px-3 py-2 font-mono text-[10px] tracking-wide text-app-muted">BUILD 2.2 • CLOUDFLARE READY</span>
+          </div>
+          <div className="min-h-[520px] lg:h-[calc(100%-110px)]">{content[activeView]}</div>
+        </section>
+      </main>
     </div>
   );
-};
-
-export default App;
+}
