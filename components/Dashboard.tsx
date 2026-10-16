@@ -16,7 +16,7 @@ export const Dashboard: React.FC = () => {
     initial: { scale: 1 },
     animate: { 
       scale: [1, 1.01, 1],
-      transition: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+      transition: { duration: 6, repeat: Infinity, ease: "easeInOut" as const }
     }
   };
 
@@ -40,7 +40,7 @@ export const Dashboard: React.FC = () => {
                       <span className="flex items-center gap-2"><User size={12} /> Admin_Alpha</span>
                   </div>
               </div>
-              <button className="p-3 bg-app-bg/50 rounded-full border border-app-border text-app-muted hover:text-app-primary hover:border-app-primary transition-all">
+              <button disabled type="button" aria-label="Notifications unavailable in demo" title="Notifications unavailable in demo" className="p-3 bg-app-bg/50 rounded-full border border-app-border text-app-muted opacity-50 cursor-not-allowed">
                   <Bell size={18} />
               </button>
             </div>

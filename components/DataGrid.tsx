@@ -17,7 +17,7 @@ const generateData = (count: number) => {
 const rawData = generateData(24);
 
 export const DataGrid: React.FC = () => {
-  const [viewMode, setViewMode] = useState<'list' | 'swarm'>('swarm');
+  const [viewMode, setViewMode] = useState<'list' | 'swarm'>('list');
   const [filter, setFilter] = useState('');
 
   const filteredData = useMemo(() => {
@@ -26,8 +26,8 @@ export const DataGrid: React.FC = () => {
   }, [filter]);
 
   return (
-    <div className="grid grid-cols-12 gap-6 h-full flex flex-col">
-      <div className="col-span-12 h-full flex flex-col">
+    <div className="flex h-full min-h-[500px] flex-col">
+      <div className="flex-1 min-h-0 flex flex-col">
         <Card className="h-full flex flex-col overflow-hidden" 
             headerAction={
              <div className="flex gap-2 items-center">
@@ -35,7 +35,7 @@ export const DataGrid: React.FC = () => {
                     <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted" />
                     <input 
                         type="text" 
-                        placeholder="Search specimen..." 
+                        placeholder="Search specimen..." aria-label="Search specimens" 
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                         className="pl-8 pr-3 py-1 bg-app-bg border border-app-border rounded text-xs text-app-text outline-none focus:border-app-primary w-48"
@@ -43,17 +43,17 @@ export const DataGrid: React.FC = () => {
                  </div>
                  <div className="w-px h-4 bg-app-border mx-1"></div>
                  <button 
-                    onClick={() => setViewMode('swarm')}
+                    aria-label="Swarm view" title="Swarm view" onClick={() => setViewMode('swarm')}
                     className={`p-1.5 rounded transition-colors ${viewMode === 'swarm' ? 'text-app-primary bg-app-primary/10' : 'text-app-muted hover:text-white'}`}>
                      <Grid size={14} />
                  </button>
                  <button 
-                    onClick={() => setViewMode('list')}
+                    aria-label="List view" title="List view" onClick={() => setViewMode('list')}
                     className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'text-app-primary bg-app-primary/10' : 'text-app-muted hover:text-white'}`}>
                      <List size={14} />
                  </button>
              </div>
-        } title="Biosphere Data">
+        } title="Biosphere Data (demo)">
           
           <div className="flex-1 relative h-full w-full p-4 overflow-hidden">
              <AnimatePresence mode="wait">
@@ -104,9 +104,9 @@ export const DataGrid: React.FC = () => {
                              // If filter exists, they cluster towards center
                              const isFiltered = !!filter;
                              const angle = (i / filteredData.length) * Math.PI * 2;
-                             const radius = isFiltered ? 100 : 200; // Cluster if filtered
-                             const xBase = Math.cos(angle) * radius + (Math.random() * 40 - 20);
-                             const yBase = Math.sin(angle) * radius + (Math.random() * 40 - 20);
+                             const radius = isFiltered ? 85 : 145; // Cluster if filtered
+                             const xBase = Math.cos(angle) * radius + (i % 3 - 1) * 18;
+                             const yBase = Math.sin(angle) * radius + (i % 4 - 2) * 10;
 
                              return (
                                  <motion.div
