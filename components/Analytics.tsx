@@ -21,8 +21,8 @@ const barData = [
 
 export const Analytics: React.FC = () => {
   return (
-    <div className="grid grid-cols-12 gap-6 h-full">
-      <div className="col-span-8 h-[400px]">
+    <div className="grid grid-cols-12 gap-4 h-full overflow-y-auto pb-10 sm:gap-6">
+      <div className="col-span-12 xl:col-span-8 h-[340px] sm:h-[400px]">
         <Card title="Traffic Overview" className="h-full">
             <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={areaData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -44,7 +44,7 @@ export const Analytics: React.FC = () => {
         </Card>
       </div>
 
-      <div className="col-span-4 h-[400px]">
+      <div className="col-span-12 xl:col-span-4 h-[340px] sm:h-[400px]">
          <Card title="Distribution" className="h-full">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData}>
@@ -61,7 +61,7 @@ export const Analytics: React.FC = () => {
 
       <div className="col-span-12">
         <Card title="Summary Statistics">
-            <div className="flex justify-around items-center">
+            <div className="flex flex-wrap justify-around items-center gap-6">
                 <div className="text-center">
                     <div className="text-3xl font-bold text-app-text">1,204</div>
                     <div className="text-xs text-app-muted uppercase mt-1">Total Hits</div>
